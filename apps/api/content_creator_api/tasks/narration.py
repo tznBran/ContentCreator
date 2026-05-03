@@ -81,11 +81,11 @@ def _estimate_duration_ms(audio: bytes, content_type: str) -> int:
             byte_rate = int.from_bytes(audio[28:32], "little")
             data_size = int.from_bytes(audio[40:44], "little")
             if byte_rate > 0:
-                return int(round(data_size / byte_rate * 1000))
+                return round(data_size / byte_rate * 1000)
         except Exception:
             pass
     # Default fallback: ~3 kB/s for spoken audio.
-    return max(1000, int(round(len(audio) / 3000 * 1000)))
+    return max(1000, round(len(audio) / 3000 * 1000))
 
 
 def synthesize_narration_job(narration_id: str) -> None:

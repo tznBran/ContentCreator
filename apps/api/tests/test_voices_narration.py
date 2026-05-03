@@ -7,6 +7,7 @@ helper is monkeypatched so we never hit MinIO from CI.
 from __future__ import annotations
 
 import io
+from itertools import pairwise
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
@@ -63,7 +64,7 @@ def test_rough_captions_distribute_evenly() -> None:
     assert out[0].start_ms == 0
     assert out[-1].end_ms == 6000
     # monotonic
-    for prev, nxt in zip(out, out[1:], strict=False):
+    for prev, nxt in pairwise(out):
         assert prev.end_ms == nxt.start_ms
         assert prev.text
 

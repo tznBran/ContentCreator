@@ -44,7 +44,7 @@ def rough_captions(script: str, total_duration_ms: int) -> list[CaptionSegment]:
     out: list[CaptionSegment] = []
     for i, sentence in enumerate(sentences):
         share = total_duration_ms * weights[i] / total_weight
-        duration = max(500, int(round(share)))
+        duration = max(500, round(share))
         end = min(total_duration_ms, cursor + duration)
         out.append(CaptionSegment(start_ms=cursor, end_ms=end, text=sentence))
         cursor = end
