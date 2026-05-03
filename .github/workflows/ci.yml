@@ -13,29 +13,27 @@ jobs:
   web:
     name: web (lint + typecheck + build)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version is read from the root package.json's "packageManager"
+      # field — do NOT also pass `version:` here or the action errors with
+      # ERR_PNPM_BAD_PM_VERSION.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: apps/web/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm lint
+      - run: pnpm --filter web lint
 
-      - run: pnpm exec tsc --noEmit
+      - run: pnpm --filter web exec tsc --noEmit
 
-      - run: pnpm build
+      - run: pnpm --filter web build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 

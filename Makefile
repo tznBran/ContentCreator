@@ -1,4 +1,4 @@
-.PHONY: help install web-dev api-dev dev infra-up infra-down infra-logs lint typecheck test build clean
+.PHONY: help install web-dev api-dev worker dev infra-up infra-down infra-logs migrate lint typecheck test build clean
 
 help:
 	@echo "ContentCreator dev commands:"
@@ -7,6 +7,8 @@ help:
 	@echo "  make infra-down    Stop infra"
 	@echo "  make api-dev       Run FastAPI with reload on :8000"
 	@echo "  make web-dev       Run Next.js on :3000"
+	@echo "  make worker        Run the RQ background worker"
+	@echo "  make migrate       Run alembic upgrade head"
 	@echo "  make dev           Start infra, api, and web together"
 	@echo "  make lint          Lint web + api"
 	@echo "  make typecheck     Typecheck web + api"
@@ -28,6 +30,12 @@ infra-logs:
 
 api-dev:
 	cd apps/api && uv run uvicorn content_creator_api.main:app --reload --host 0.0.0.0 --port 8000
+
+worker:
+	cd apps/api && uv run python -m content_creator_api.worker
+
+migrate:
+	cd apps/api && uv run alembic upgrade head
 
 web-dev:
 	pnpm --filter web dev

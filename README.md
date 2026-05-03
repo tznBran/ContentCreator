@@ -151,7 +151,25 @@ make build           # next build
 ## Roadmap
 
 - [x] **Phase 0** — repo skeleton, web ↔ api ↔ db wiring, CI
-- [ ] **Phase 1** — single‑clip generation via Seedance 2.0, N‑variant scoring
+- [x] **Phase 1** — single‑clip generation via Seedance 2.0, N‑variant scoring
 - [ ] **Phase 2** — multi‑shot pipeline + full‑timeline editor (Remotion)
 - [ ] **Phase 3** — voice cloning + narration + auto‑captions
 - [ ] **Phase 4** — OAuth + multi‑platform publishing (YouTube, TikTok, Instagram)
+
+### Running Phase 1 locally
+
+Phase 1 introduces an RQ background worker that drives Seedance 2.0
+generation and clip scoring. To exercise it end‑to‑end:
+
+```bash
+make infra-up               # postgres + redis + minio
+make migrate                # alembic upgrade head
+export OPENROUTER_API_KEY=…  # required to actually call the model
+make api-dev                # terminal 1
+make worker                 # terminal 2 — picks up generation jobs
+make web-dev                # terminal 3
+```
+
+Then open a project, submit the "Generate clips" form, and watch the
+variant grid update as each clip moves PENDING → GENERATING → DOWNLOADING →
+SCORING → SUCCEEDED. Pick a winner with the **Use this clip** button.
