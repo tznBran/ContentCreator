@@ -65,6 +65,9 @@ class Settings(BaseSettings):
 
     # Misc
     environment: str = Field(default="development")
+    # When false, generation endpoints create rows but skip enqueueing RQ
+    # tasks. Useful for unit tests.
+    enqueue_jobs: bool = True
 
     @property
     def cors_origins_list(self) -> list[str]:
