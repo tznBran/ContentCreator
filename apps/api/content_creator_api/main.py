@@ -18,6 +18,7 @@ from content_creator_api.routers import (
     projects,
     storyboard,
     timeline,
+    voices,
 )
 
 
@@ -67,6 +68,7 @@ def create_app() -> FastAPI:
     app.include_router(generations.router)
     app.include_router(storyboard.router)
     app.include_router(timeline.router)
+    app.include_router(voices.router)
 
     return app
 

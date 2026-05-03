@@ -61,6 +61,15 @@ def put_bytes(key: str, data: bytes, *, content_type: str = "application/octet-s
     return key
 
 
+def get_bytes(key: str) -> bytes:
+    """Download an object from the bucket as raw bytes."""
+    settings = get_settings()
+    s3 = _client()
+    response = s3.get_object(Bucket=settings.s3_bucket, Key=key)
+    body: bytes = response["Body"].read()
+    return body
+
+
 def upload_from_url(url: str, key: str, *, content_type: str | None = None) -> int:
     """Stream ``url`` into the bucket at ``key``. Returns bytes written."""
     settings = get_settings()

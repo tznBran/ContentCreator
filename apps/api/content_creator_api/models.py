@@ -62,6 +62,20 @@ class ExportStatus(StrEnum):
     FAILED = "failed"
 
 
+class VoiceStatus(StrEnum):
+    PENDING = "pending"
+    READY = "ready"
+    FAILED = "failed"
+
+
+class NarrationStatus(StrEnum):
+    PENDING = "pending"
+    SYNTHESIZING = "synthesizing"
+    UPLOADING = "uploading"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 class Project(SQLModel, table=True):
     """A user-facing video project."""
 
@@ -188,6 +202,52 @@ class ExportJob(SQLModel, table=True):
     storage_key: str | None = Field(default=None, max_length=512)
     public_url: str | None = Field(default=None, max_length=2000)
     duration_ms: int | None = Field(default=None)
+    error: str | None = Field(default=None, max_length=2000)
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
+
+
+class VoiceProfile(SQLModel, table=True):
+    """A user's cloned voice (via F5-TTS / ElevenLabs / Replicate)."""
+
+    __tablename__ = "voice_profiles"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    name: str = Field(max_length=200)
+    provider: str = Field(default="f5tts", max_length=64)
+    # Where the user's recorded sample lives (in our bucket).
+    sample_storage_key: str | None = Field(default=None, max_length=512)
+    sample_public_url: str | None = Field(default=None, max_length=2000)
+    # ID returned by the upstream provider once the voice is registered.
+    provider_voice_id: str | None = Field(default=None, max_length=200)
+    # Optional reference transcript of the sample (improves clone quality
+    # for F5-TTS).
+    reference_text: str | None = Field(default=None, max_length=2000)
+    status: VoiceStatus = Field(default=VoiceStatus.PENDING, index=True)
+    error: str | None = Field(default=None, max_length=2000)
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
+
+
+class NarrationJob(SQLModel, table=True):
+    """A request to synthesize a script with a given voice."""
+
+    __tablename__ = "narration_jobs"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    project_id: UUID = Field(foreign_key="projects.id", index=True, nullable=False)
+    voice_id: UUID | None = Field(
+        default=None, foreign_key="voice_profiles.id", index=True
+    )
+    script: str = Field(max_length=20000)
+    status: NarrationStatus = Field(default=NarrationStatus.PENDING, index=True)
+    storage_key: str | None = Field(default=None, max_length=512)
+    public_url: str | None = Field(default=None, max_length=2000)
+    duration_ms: int | None = Field(default=None)
+    # JSON-encoded list of {"start_ms": int, "end_ms": int, "text": str}.
+    # Stored as a string so this works on both Postgres and SQLite without
+    # requiring sqlmodel JSON support.
+    captions_json: str | None = Field(default=None, max_length=200000)
     error: str | None = Field(default=None, max_length=2000)
     created_at: datetime = Field(default_factory=_utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
