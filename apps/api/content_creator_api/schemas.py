@@ -7,7 +7,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from content_creator_api.models import ClipStatus, GenerationJobStatus, ProjectStatus
+from content_creator_api.models import (
+    ClipStatus,
+    ExportStatus,
+    GenerationJobStatus,
+    ProjectStatus,
+    TimelineItemType,
+)
 
 
 class ProjectCreate(BaseModel):
@@ -90,3 +96,113 @@ class GenerationDetail(GenerationRead):
 
 class WinnerSelect(BaseModel):
     clip_id: UUID
+
+
+# --- Phase 2: Storyboard / Shots / Timeline / Exports -----------------
+
+
+class StoryboardCreate(BaseModel):
+    """Ask the LLM to break a project's prompt into N ordered shots."""
+
+    prompt: str | None = Field(
+        default=None,
+        description="If omitted, the project's prompt is used.",
+        max_length=4000,
+    )
+    n_shots: int = Field(default=5, ge=1, le=20)
+    total_duration_seconds: int = Field(default=30, ge=5, le=180)
+    aspect_ratio: str = Field(default="9:16", max_length=16)
+
+
+class ShotCreate(BaseModel):
+    prompt: str = Field(min_length=1, max_length=4000)
+    duration_seconds: int = Field(default=5, ge=1, le=30)
+    aspect_ratio: str = Field(default="9:16", max_length=16)
+    notes: str | None = Field(default=None, max_length=2000)
+    order_index: int | None = Field(default=None, ge=0)
+
+
+class ShotUpdate(BaseModel):
+    prompt: str | None = Field(default=None, max_length=4000)
+    duration_seconds: int | None = Field(default=None, ge=1, le=30)
+    aspect_ratio: str | None = Field(default=None, max_length=16)
+    notes: str | None = Field(default=None, max_length=2000)
+    order_index: int | None = Field(default=None, ge=0)
+    selected_clip_id: UUID | None = None
+
+
+class ShotRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    order_index: int
+    prompt: str
+    duration_seconds: int
+    aspect_ratio: str
+    notes: str | None
+    generation_job_id: UUID | None
+    selected_clip_id: UUID | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class TimelineItemRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    order_index: int
+    item_type: TimelineItemType
+    clip_id: UUID | None
+    source_start_ms: int
+    duration_ms: int
+    transition_in: str | None
+    transition_out: str | None
+    text_overlay: str | None
+    audio_storage_key: str | None
+    volume: float
+    created_at: datetime
+    updated_at: datetime
+
+
+class TimelineItemWrite(BaseModel):
+    """Used in PUT /timeline. ``id`` is preserved if present, else new row."""
+
+    id: UUID | None = None
+    item_type: TimelineItemType = TimelineItemType.CLIP
+    clip_id: UUID | None = None
+    source_start_ms: int = Field(default=0, ge=0)
+    duration_ms: int = Field(default=5000, ge=100)
+    transition_in: str | None = Field(default=None, max_length=64)
+    transition_out: str | None = Field(default=None, max_length=64)
+    text_overlay: str | None = Field(default=None, max_length=500)
+    audio_storage_key: str | None = Field(default=None, max_length=512)
+    volume: float = Field(default=1.0, ge=0.0, le=2.0)
+
+
+class TimelinePut(BaseModel):
+    items: list[TimelineItemWrite] = Field(default_factory=list)
+
+
+class ExportCreate(BaseModel):
+    width: int = Field(default=1080, ge=64, le=3840)
+    height: int = Field(default=1920, ge=64, le=3840)
+    fps: int = Field(default=30, ge=1, le=120)
+
+
+class ExportRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    status: ExportStatus
+    width: int
+    height: int
+    fps: int
+    storage_key: str | None
+    public_url: str | None
+    duration_ms: int | None
+    error: str | None
+    created_at: datetime
+    updated_at: datetime

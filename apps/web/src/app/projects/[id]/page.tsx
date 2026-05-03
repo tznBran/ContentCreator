@@ -77,9 +77,17 @@ export default function ProjectDetailPage({ params }: PageProps) {
                 </p>
               )}
             </div>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-              {project.status}
-            </span>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/projects/${project.id}/edit`}
+                className="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              >
+                Open editor →
+              </Link>
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                {project.status}
+              </span>
+            </div>
           </header>
 
           <section>

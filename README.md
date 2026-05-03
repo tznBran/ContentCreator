@@ -152,7 +152,7 @@ make build           # next build
 
 - [x] **Phase 0** — repo skeleton, web ↔ api ↔ db wiring, CI
 - [x] **Phase 1** — single‑clip generation via Seedance 2.0, N‑variant scoring
-- [ ] **Phase 2** — multi‑shot pipeline + full‑timeline editor (Remotion)
+- [x] **Phase 2** — multi‑shot pipeline + timeline editor + ffmpeg export
 - [ ] **Phase 3** — voice cloning + narration + auto‑captions
 - [ ] **Phase 4** — OAuth + multi‑platform publishing (YouTube, TikTok, Instagram)
 
