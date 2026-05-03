@@ -240,6 +240,21 @@ export const api = {
     request<NarrationRead[]>(`/projects/${projectId}/narrations`),
   getNarration: (narrationId: string) =>
     request<NarrationRead>(`/narrations/${narrationId}`),
+
+  // Phase 4: OAuth + accounts + publishing
+  oauthStart: (platform: SocialPlatform) =>
+    request<OAuthStartResponse>(`/oauth/${platform}/start`),
+  listAccounts: () => request<SocialAccount[]>(`/accounts`),
+  deleteAccount: (id: string) =>
+    request<void>(`/accounts/${id}`, { method: "DELETE" }),
+  createPublish: (projectId: string, payload: PublishCreate) =>
+    request<PublishRead>(`/projects/${projectId}/publishes`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listPublishes: (projectId: string) =>
+    request<PublishRead[]>(`/projects/${projectId}/publishes`),
+  getPublish: (id: string) => request<PublishRead>(`/publishes/${id}`),
 };
 
 // --- Phase 3 types ---
@@ -382,4 +397,58 @@ export interface ExportCreate {
   width?: number;
   height?: number;
   fps?: number;
+}
+
+// --- Phase 4 types ---
+
+export type SocialPlatform = "youtube" | "tiktok" | "instagram";
+export type PublishVisibility = "private" | "unlisted" | "public";
+export type PublishStatus =
+  | "pending"
+  | "uploading"
+  | "processing"
+  | "succeeded"
+  | "failed";
+
+export interface SocialAccount {
+  id: string;
+  platform: SocialPlatform;
+  account_name: string;
+  external_id: string;
+  expires_at: string | null;
+  scope: string | null;
+  extra_json: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OAuthStartResponse {
+  authorize_url: string;
+  state: string;
+}
+
+export interface PublishCreate {
+  export_id: string;
+  account_id: string;
+  platform: SocialPlatform;
+  title: string;
+  description?: string;
+  visibility?: PublishVisibility;
+}
+
+export interface PublishRead {
+  id: string;
+  project_id: string;
+  export_id: string;
+  account_id: string;
+  platform: SocialPlatform;
+  title: string;
+  description: string;
+  visibility: PublishVisibility;
+  status: PublishStatus;
+  platform_media_id: string | null;
+  platform_url: string | null;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
 }

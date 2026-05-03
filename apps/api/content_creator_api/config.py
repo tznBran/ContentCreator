@@ -62,6 +62,15 @@ class Settings(BaseSettings):
     tiktok_client_secret: str = ""
     meta_app_id: str = ""
     meta_app_secret: str = ""
+    # Where the OAuth callback lives, e.g. "http://localhost:8000".
+    # Provider-specific paths are appended automatically.
+    oauth_redirect_base: str = "http://localhost:8000"
+    # Where the frontend lives (used to redirect back after OAuth).
+    web_base_url: str = "http://localhost:3000"
+    # Optional: instagram graph user id (a.k.a. ``ig_user_id``) for the
+    # Page-linked IG Business account. We could derive it via the Graph
+    # API, but storing it explicitly avoids an extra call per publish.
+    instagram_user_id: str = ""
 
     # Misc
     environment: str = Field(default="development")

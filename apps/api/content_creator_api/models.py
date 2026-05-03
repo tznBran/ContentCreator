@@ -76,6 +76,26 @@ class NarrationStatus(StrEnum):
     FAILED = "failed"
 
 
+class SocialPlatform(StrEnum):
+    YOUTUBE = "youtube"
+    TIKTOK = "tiktok"
+    INSTAGRAM = "instagram"
+
+
+class PublishVisibility(StrEnum):
+    PRIVATE = "private"
+    UNLISTED = "unlisted"
+    PUBLIC = "public"
+
+
+class PublishStatus(StrEnum):
+    PENDING = "pending"
+    UPLOADING = "uploading"
+    PROCESSING = "processing"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 class Project(SQLModel, table=True):
     """A user-facing video project."""
 
@@ -248,6 +268,54 @@ class NarrationJob(SQLModel, table=True):
     # Stored as a string so this works on both Postgres and SQLite without
     # requiring sqlmodel JSON support.
     captions_json: str | None = Field(default=None, max_length=200000)
+    error: str | None = Field(default=None, max_length=2000)
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
+
+
+class SocialAccount(SQLModel, table=True):
+    """A connected social media account (YouTube/TikTok/Instagram).
+
+    Tokens are stored verbatim in this single-user prototype. When we
+    move to multi-user we'll encrypt at-rest with a per-user data key.
+    """
+
+    __tablename__ = "social_accounts"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    platform: SocialPlatform = Field(index=True)
+    # Display info from the provider (e.g. channel title, IG handle).
+    account_name: str = Field(max_length=200)
+    external_id: str = Field(max_length=200, index=True)
+    access_token: str = Field(max_length=4000)
+    refresh_token: str | None = Field(default=None, max_length=4000)
+    expires_at: datetime | None = Field(default=None)
+    scope: str | None = Field(default=None, max_length=2000)
+    # JSON blob of any extra provider-specific identifiers we need
+    # later (e.g. IG ``ig_user_id``, FB page ID, YouTube channel ID).
+    extra_json: str | None = Field(default=None, max_length=4000)
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
+
+
+class PublishJob(SQLModel, table=True):
+    """One platform upload of a final exported mp4."""
+
+    __tablename__ = "publish_jobs"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    project_id: UUID = Field(foreign_key="projects.id", index=True, nullable=False)
+    export_id: UUID = Field(foreign_key="export_jobs.id", index=True, nullable=False)
+    account_id: UUID = Field(
+        foreign_key="social_accounts.id", index=True, nullable=False
+    )
+    platform: SocialPlatform = Field(index=True)
+    title: str = Field(max_length=200)
+    description: str = Field(default="", max_length=5000)
+    visibility: PublishVisibility = Field(default=PublishVisibility.PRIVATE)
+    status: PublishStatus = Field(default=PublishStatus.PENDING, index=True)
+    platform_media_id: str | None = Field(default=None, max_length=200)
+    platform_url: str | None = Field(default=None, max_length=2000)
     error: str | None = Field(default=None, max_length=2000)
     created_at: datetime = Field(default_factory=_utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=_utcnow, nullable=False)

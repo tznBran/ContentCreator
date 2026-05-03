@@ -13,6 +13,9 @@ from content_creator_api.models import (
     GenerationJobStatus,
     NarrationStatus,
     ProjectStatus,
+    PublishStatus,
+    PublishVisibility,
+    SocialPlatform,
     TimelineItemType,
     VoiceStatus,
 )
@@ -257,6 +260,56 @@ class NarrationRead(BaseModel):
     public_url: str | None
     duration_ms: int | None
     captions_json: str | None
+    error: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+# --- Phase 4: Social accounts + publishing ----------------------------
+
+
+class SocialAccountRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    platform: SocialPlatform
+    account_name: str
+    external_id: str
+    expires_at: datetime | None
+    scope: str | None
+    extra_json: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class OAuthStartResponse(BaseModel):
+    authorize_url: str
+    state: str
+
+
+class PublishCreate(BaseModel):
+    export_id: UUID
+    account_id: UUID
+    platform: SocialPlatform
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=5000)
+    visibility: PublishVisibility = PublishVisibility.PRIVATE
+
+
+class PublishRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    export_id: UUID
+    account_id: UUID
+    platform: SocialPlatform
+    title: str
+    description: str
+    visibility: PublishVisibility
+    status: PublishStatus
+    platform_media_id: str | None
+    platform_url: str | None
     error: str | None
     created_at: datetime
     updated_at: datetime
