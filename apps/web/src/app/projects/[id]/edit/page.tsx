@@ -14,6 +14,7 @@ import {
   api,
 } from "@/lib/api";
 import { VoicePanel } from "@/components/VoicePanel";
+import { PublishPanel } from "@/components/PublishPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -431,6 +432,15 @@ export default function ProjectEditorPage({ params }: PageProps) {
               ))}
             </ul>
           )}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-zinc-500">
+          Publish
+        </h2>
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <PublishPanel projectId={projectId} exports={exports} />
         </div>
       </section>
     </div>
