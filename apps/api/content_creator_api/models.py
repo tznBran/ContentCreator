@@ -42,6 +42,26 @@ class ClipStatus(StrEnum):
     FAILED = "failed"
 
 
+class TimelineItemType(StrEnum):
+    """Discriminator for items on the project timeline.
+
+    Phase 2 only emits ``CLIP``; Phase 3 will add ``AUDIO`` (narration / BGM)
+    and ``TEXT`` (caption overlays).
+    """
+
+    CLIP = "clip"
+    AUDIO = "audio"
+    TEXT = "text"
+
+
+class ExportStatus(StrEnum):
+    PENDING = "pending"
+    RENDERING = "rendering"
+    UPLOADING = "uploading"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 class Project(SQLModel, table=True):
     """A user-facing video project."""
 
@@ -96,6 +116,78 @@ class Clip(SQLModel, table=True):
     score: float | None = Field(default=None)
     score_explanation: str | None = Field(default=None, max_length=2000)
     cost_usd: float | None = Field(default=None)
+    error: str | None = Field(default=None, max_length=2000)
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
+
+
+class Shot(SQLModel, table=True):
+    """One ordered shot in a project's storyboard.
+
+    Each shot is its own prompt + duration + (eventually) a chosen winning
+    clip from a Phase 1 GenerationJob. Shots are ordered by ``order_index``.
+    """
+
+    __tablename__ = "shots"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    project_id: UUID = Field(foreign_key="projects.id", index=True, nullable=False)
+    order_index: int = Field(default=0, ge=0, index=True)
+    prompt: str = Field(max_length=4000)
+    duration_seconds: int = Field(default=5, ge=1, le=30)
+    aspect_ratio: str = Field(default="9:16", max_length=16)
+    notes: str | None = Field(default=None, max_length=2000)
+    generation_job_id: UUID | None = Field(
+        default=None, foreign_key="generation_jobs.id"
+    )
+    selected_clip_id: UUID | None = Field(default=None, foreign_key="clips.id")
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
+
+
+class TimelineItem(SQLModel, table=True):
+    """A single item on the project timeline.
+
+    For now (Phase 2), only ``item_type=CLIP`` is rendered. The fields are
+    sized so that Phase 3 (audio overlays, captions) and Phase 4 don't
+    require schema changes.
+    """
+
+    __tablename__ = "timeline_items"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    project_id: UUID = Field(foreign_key="projects.id", index=True, nullable=False)
+    order_index: int = Field(default=0, ge=0, index=True)
+    item_type: TimelineItemType = Field(default=TimelineItemType.CLIP)
+    clip_id: UUID | None = Field(default=None, foreign_key="clips.id")
+    # Trim within the source clip (in milliseconds).
+    source_start_ms: int = Field(default=0, ge=0)
+    duration_ms: int = Field(default=5000, ge=100)
+    # Reserved fields for transitions / overlays.
+    transition_in: str | None = Field(default=None, max_length=64)
+    transition_out: str | None = Field(default=None, max_length=64)
+    text_overlay: str | None = Field(default=None, max_length=500)
+    # Generic key for future audio overlays (Phase 3).
+    audio_storage_key: str | None = Field(default=None, max_length=512)
+    volume: float = Field(default=1.0, ge=0.0, le=2.0)
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=_utcnow, nullable=False)
+
+
+class ExportJob(SQLModel, table=True):
+    """A render of the project timeline to a single mp4 file."""
+
+    __tablename__ = "export_jobs"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    project_id: UUID = Field(foreign_key="projects.id", index=True, nullable=False)
+    status: ExportStatus = Field(default=ExportStatus.PENDING, index=True)
+    width: int = Field(default=1080, ge=64)
+    height: int = Field(default=1920, ge=64)
+    fps: int = Field(default=30, ge=1, le=120)
+    storage_key: str | None = Field(default=None, max_length=512)
+    public_url: str | None = Field(default=None, max_length=2000)
+    duration_ms: int | None = Field(default=None)
     error: str | None = Field(default=None, max_length=2000)
     created_at: datetime = Field(default_factory=_utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=_utcnow, nullable=False)

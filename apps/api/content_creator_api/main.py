@@ -12,7 +12,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from content_creator_api import __version__
 from content_creator_api.config import get_settings
-from content_creator_api.routers import generations, health, projects
+from content_creator_api.routers import (
+    generations,
+    health,
+    projects,
+    storyboard,
+    timeline,
+)
 
 
 def _configure_logging(level: str) -> None:
@@ -59,6 +65,8 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(projects.router)
     app.include_router(generations.router)
+    app.include_router(storyboard.router)
+    app.include_router(timeline.router)
 
     return app
 
