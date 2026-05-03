@@ -11,8 +11,10 @@ from content_creator_api.models import (
     ClipStatus,
     ExportStatus,
     GenerationJobStatus,
+    NarrationStatus,
     ProjectStatus,
     TimelineItemType,
+    VoiceStatus,
 )
 
 
@@ -203,6 +205,58 @@ class ExportRead(BaseModel):
     storage_key: str | None
     public_url: str | None
     duration_ms: int | None
+    error: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+# --- Phase 3: Voices / Narrations / Captions --------------------------
+
+
+class VoiceCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    reference_text: str | None = Field(default=None, max_length=2000)
+
+
+class VoiceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+    provider: str
+    sample_storage_key: str | None
+    sample_public_url: str | None
+    provider_voice_id: str | None
+    reference_text: str | None
+    status: VoiceStatus
+    error: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class NarrationCreate(BaseModel):
+    voice_id: UUID
+    script: str = Field(min_length=1, max_length=20000)
+
+
+class CaptionSegmentRead(BaseModel):
+    start_ms: int
+    end_ms: int
+    text: str
+
+
+class NarrationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    voice_id: UUID | None
+    script: str
+    status: NarrationStatus
+    storage_key: str | None
+    public_url: str | None
+    duration_ms: int | None
+    captions_json: str | None
     error: str | None
     created_at: datetime
     updated_at: datetime

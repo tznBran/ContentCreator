@@ -214,7 +214,84 @@ export const api = {
   listExports: (projectId: string) =>
     request<ExportRead[]>(`/projects/${projectId}/exports`),
   getExport: (exportId: string) => request<ExportRead>(`/exports/${exportId}`),
+
+  // Voices (Phase 3)
+  listVoices: () => request<Voice[]>(`/voices`),
+  getVoice: (voiceId: string) => request<Voice>(`/voices/${voiceId}`),
+  deleteVoice: (voiceId: string) =>
+    request<void>(`/voices/${voiceId}`, { method: "DELETE" }),
+  createVoice: async (form: FormData) => {
+    const url = `${API_BASE_URL}/voices`;
+    const response = await fetch(url, { method: "POST", body: form });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`POST /voices failed (${response.status}): ${text}`);
+    }
+    return (await response.json()) as Voice;
+  },
+
+  // Narrations (Phase 3)
+  createNarration: (projectId: string, payload: NarrationCreate) =>
+    request<NarrationRead>(`/projects/${projectId}/narrations`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listNarrations: (projectId: string) =>
+    request<NarrationRead[]>(`/projects/${projectId}/narrations`),
+  getNarration: (narrationId: string) =>
+    request<NarrationRead>(`/narrations/${narrationId}`),
 };
+
+// --- Phase 3 types ---
+
+export type VoiceStatus = "pending" | "ready" | "failed";
+
+export interface Voice {
+  id: string;
+  name: string;
+  provider: string;
+  sample_storage_key: string | null;
+  sample_public_url: string | null;
+  provider_voice_id: string | null;
+  reference_text: string | null;
+  status: VoiceStatus;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NarrationCreate {
+  voice_id: string;
+  script: string;
+}
+
+export type NarrationStatus =
+  | "pending"
+  | "synthesizing"
+  | "uploading"
+  | "succeeded"
+  | "failed";
+
+export interface CaptionSegment {
+  start_ms: number;
+  end_ms: number;
+  text: string;
+}
+
+export interface NarrationRead {
+  id: string;
+  project_id: string;
+  voice_id: string | null;
+  script: string;
+  status: NarrationStatus;
+  storage_key: string | null;
+  public_url: string | null;
+  duration_ms: number | null;
+  captions_json: string | null;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 // --- Phase 2 types ---
 
