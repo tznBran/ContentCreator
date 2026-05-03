@@ -1,0 +1,56 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+build/
+.pnpm-store/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+
+# uv
+.python-version
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local data
+data/
+storage/
+*.sqlite
+*.db
+
+# Generated media (large, ephemeral)
+media/
+*.mp4
+*.webm
+*.mov
+*.wav
+*.mp3
+!apps/web/public/**/*.mp4
+!apps/web/public/**/*.webm

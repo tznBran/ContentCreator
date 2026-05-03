@@ -1,0 +1,25 @@
+{
+  "name": "content-creator",
+  "private": true,
+  "version": "0.0.1",
+  "description": "One-stop AI content creation platform: generate, edit, and publish AI videos.",
+  "scripts": {
+    "web:dev": "pnpm --filter web dev",
+    "web:build": "pnpm --filter web build",
+    "web:lint": "pnpm --filter web lint",
+    "api:dev": "cd apps/api && uv run uvicorn content_creator_api.main:app --reload --host 0.0.0.0 --port 8000",
+    "api:lint": "cd apps/api && uv run ruff check .",
+    "api:typecheck": "cd apps/api && uv run mypy content_creator_api",
+    "api:test": "cd apps/api && uv run pytest",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down",
+    "infra:logs": "docker compose -f infra/docker-compose.yml logs -f",
+    "lint": "pnpm web:lint && pnpm api:lint",
+    "typecheck": "pnpm --filter web exec tsc --noEmit && pnpm api:typecheck"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.15.9"
+}
